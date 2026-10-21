@@ -1,18 +1,11 @@
-// Netlify Function: Proxy de voces Edge / Google según selección de voz
-const TLD_MAP = {
-  'es-CL': 'com.mx',
-  'es-CL-LorenzoNeural': 'com.mx',
-  'es-MX': 'com.mx',
-  'es-MX-JorgeNeural': 'com.mx',
-  'es-ES': 'es',
-  'es-US': 'com'
-};
+// Netlify Function: Proxy para Edge TTS (Voces masculinas neuronales)
+const { MsEdgeTTS, OUTPUT_FORMAT } = require('msedge-tts');
 
 exports.handler = async (event) => {
   try {
     const params = new URLSearchParams(event.body || event.rawQuery || '');
     let text = params.get('text') || '';
-    let voice = params.get('voice') || 'es-CL';
+    let voice = params.get('voice') || 'es-CL-LorenzoNeural';
 
     if (!text && event.body) {
       try {
@@ -25,22 +18,23 @@ exports.handler = async (event) => {
     text = text.trim().slice(0, 600);
     if (!text) return { statusCode: 400, body: 'Texto vacio' };
 
-    const tld = TLD_MAP[voice] || 'com.mx';
-    
-    // Generación de la voz con los parámetros seleccionados
-    const url = `https://translate.google.${tld}/translate_tts?ie=UTF-8&client=tw-ob&tl=es&q=${encodeURIComponent(text)}`;
-    const res = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
-    });
+    // Inicializar el cliente de Edge TTS
+    const tts = new MsEdgeTTS();
+    await tts.setMetadata(voice, OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_STEREO_MP3);
 
-    if (!res.ok) throw new Error('Error al conectar con el motor de voz');
+    const readable = tts.toStream(text);
+    const chunks = [];
 
-    const arrayBuffer = await res.arrayBuffer();
-    const base64Audio = Buffer.from(arrayBuffer).toString('base64');
+    for await (const chunk of readable) {
+      chunks.push(chunk);
+    }
+
+    const audioBuffer = Buffer.concat(chunks);
+    const base64Audio = audioBuffer.toString('base64');
 
     return {
       statusCode: 200,
-      headers: { 
+      headers: {
         'Content-Type': 'audio/mpeg',
         'Access-Control-Allow-Origin': '*'
       },
