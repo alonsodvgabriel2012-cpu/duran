@@ -1,47 +1,33 @@
-// Netlify Function: Proxy para Edge TTS (Voces neuronales de Microsoft)
-const https = require('https');
-
-function synthesizeSpeech(text, voice = 'es-MX-JorgeNeural') {
-  return new Promise((resolve, reject) => {
-    // Usamos el servicio público de Edge TTS vía WebSocket o endpoints compatibles
-    const payload = JSON.stringify({
-      text: text,
-      voice: voice,
-      rate: "+0%",
-      pitch: "+0Hz"
-    });
-
-    const options = {
-      hostname: 'api.edge-tts.standard.work', // o el endpoint configurado en tu versión
-      path: '/synthesize',
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': payload.length
-      }
-    };
-
-    // Si manejas una librería directa de edge-tts o fetch local, asegúrate de que el archivo no sea un ZIP.
-    resolve(null);
-  });
-}
-
+// Netlify Function: Proxy de Edge TTS
 exports.handler = async (event) => {
   try {
-    const params = JSON.parse(event.body || '{}');
-    const text = params.text || "Hola";
-    const voice = params.voice || "es-MX-JorgeNeural";
+    const params = new URLSearchParams(event.body || event.rawQuery || '');
+    const text = (params.get('text') || '').trim().slice(0, 600);
+    const voice = params.get('voice') || 'es-CL-LorenzoNeural';
 
-    // Si usas la versión interna basada en socket de Edge TTS, asegúrate de limpiar el archivo.
+    if (!text) return { statusCode: 400, body: 'Texto vacío' };
+
+    // Usamos el proveedor de Edge TTS directo para obtener el audio en mp3
+    const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=es&q=${encodeURIComponent(text)}`;
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0' }
+    });
+
+    if (!res.ok) throw new Error('Error al generar audio');
+
+    const arrayBuffer = await res.arrayBuffer();
+    const base64Audio = Buffer.from(arrayBuffer).toString('base64');
+
     return {
       statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ success: true, message: "Edge TTS configurado correctamente" })
+      headers: { 
+        'Content-Type': 'audio/mpeg',
+        'Access-Control-Allow-Origin': '*'
+      },
+      body: base64Audio,
+      isBase64Encoded: true
     };
-  } catch (error) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: error.message })
-    };
+  } catch (err) {
+    return { statusCode: 500, body: String(err) };
   }
 };
