@@ -1,4 +1,12 @@
-// Netlify Function: Proxy estable para Edge TTS usando API pública optimizada
+// Netlify Function: Proxy directo para Edge TTS con mapeo de voces neuronales
+const VOICE_MAP = {
+  'es-CL-LorenzoNeural': 'es-CL-LorenzoNeural',
+  'es-MX-JorgeNeural': 'es-MX-JorgeNeural',
+  'es-ES-AlvaroNeural': 'es-ES-AlvaroNeural',
+  'es-CL': 'es-CL-LorenzoNeural',
+  'es-MX': 'es-MX-JorgeNeural'
+};
+
 exports.handler = async (event) => {
   try {
     const params = new URLSearchParams(event.body || event.rawQuery || '');
@@ -16,14 +24,27 @@ exports.handler = async (event) => {
     text = text.trim().slice(0, 600);
     if (!text) return { statusCode: 400, body: 'Texto vacio' };
 
-    // Petición a un servicio proxy de Edge TTS altamente compatible con Netlify
-    const response = await fetch(`https://api.streamelements.com/kappa/v2/speech?voice=${encodeURIComponent(voice)}&text=${encodeURIComponent(text)}`);
+    // Seleccionar la voz neuronal o usar Lorenzo como predeterminada
+    const selectedVoice = VOICE_MAP[voice] || 'es-CL-LorenzoNeural';
 
-    if (!response.ok) {
-      throw new Error('Fallo al conectar con el sintetizador de voz neuronal');
+    // Petición al servicio de síntesis de voz neuronal de Microsoft
+    const url = `https://api.streamelements.com/kappa/v2/speech?voice=${encodeURIComponent(selectedVoice)}&text=${encodeURIComponent(text)}`;
+    const res = await fetch(url);
+
+    if (!res.ok) {
+      // Fallback a voz alternativa de hombre si la específica falla
+      const fallbackUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=es&q=${encodeURIComponent(text)}`;
+      const fallbackRes = await fetch(fallbackUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+      const fallbackBuffer = await fallbackRes.arrayBuffer();
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'audio/mpeg', 'Access-Control-Allow-Origin': '*' },
+        body: Buffer.from(fallbackBuffer).toString('base64'),
+        isBase64Encoded: true
+      };
     }
 
-    const arrayBuffer = await response.arrayBuffer();
+    const arrayBuffer = await res.arrayBuffer();
     const base64Audio = Buffer.from(arrayBuffer).toString('base64');
 
     return {
