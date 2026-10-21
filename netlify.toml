@@ -1,0 +1,23 @@
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+# Las funciones se empaquetan con esbuild e incluyen "msedge-tts" (package.json).
+# IMPORTANTE: las funciones solo se despliegan desde Git/GitHub o con Netlify CLI,
+# NO arrastrando la carpeta a Netlify Drop (ahí /.netlify/functions/* da 404).
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+# Rutas cortas opcionales hacia las funciones (la app usa /.netlify/functions/... directamente).
+[[redirects]]
+  from = "/api/tts-edge"
+  to = "/.netlify/functions/tts-edge"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/tts"
+  to = "/.netlify/functions/tts"
+  status = 200
+  force = true

@@ -1,0 +1,6 @@
+{
+  "name": "editor-video-youtube",
+  "version": "9.3.0",
+  "private": true,
+  "dependencies": { "msedge-tts": "^2.1.0" }
+}

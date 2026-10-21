@@ -1,0 +1,135 @@
+EDITOR DE VIDEO PARA YOUTUBE Y SHORTS  (todo en el navegador, sin instalar nada)
+
+SUBIR A NETLIFY (sin instalar nada)
+1. Descomprime el zip en tu PC.
+2. Entra a app.netlify.com/drop y ARRASTRA la carpeta descomprimida (no el zip).
+3. Abre la URL que te da Netlify, en Google Chrome o Microsoft Edge (escritorio).
+4. Pulsa "Ejemplo" y "Analizar guion": verás escenas SIN números de tiempo.
+5. Sube imágenes/videos, pulsa "Repartir en escenas", luego "Generar voz" y "Exportar MP4".
+
+VOZ EN NETLIFY (elige una)
+A) Azure (recomendada, voces neuronales muy naturales, gratis 500.000 caracteres/mes): crea un recurso "Speech" en portal.azure.com,
+   pega la clave y la región en el panel derecho de la app. La clave se guarda solo en TU navegador (no va en los archivos).
+B) Voz gratuita de Google: usa una Netlify Function (carpeta netlify/functions). Netlify Drop a veces NO despliega funciones; si
+   "Generar voz" falla sin clave de Azure, despliega desde GitHub (Add new site > Import from Git) o usa la opción A.
+C) Sube tu propia narración mp3/wav en el panel derecho.
+
+FORMATOS DE GUION ACEPTADOS (los tiempos NUNCA se leen ni se muestran)
+  0 a 5 seg: texto      5-10 seg: texto      [10 – 15.5 s]: texto      0:15-0:20: texto
+  Las líneas siguientes sin marca se unen a la escena anterior; una línea en blanco la cierra.
+  Texto sin marcas: se calcula la duración por palabras (~2.5 palabras/seg).
+
+VOCES (detalles)
+- Google es inteligible pero algo robótico; Azure suena mucho más natural.
+- Si la voz de una escena dura más que su tiempo, se acelera hasta 1.3x y la app te avisa.
+
+LÍMITES CONOCIDOS
+- No hay límite de duración. La exportación se hace en tu navegador: videos largos (10+ min) usan mucha RAM; usa Chrome/Edge en escritorio, no celular.
+- Los clips de video se exportan sin su audio original (solo voz + música).
+- Una sola pista de música (se repite y baja al final) y una pista de clips.
+- Si tu navegador no tiene AAC, el audio se exporta en Opus dentro del MP4 (YouTube lo acepta).
+Prueba del analizador: node test-parser.js (opcional, requiere Node).
+
+CELULAR Y COMPUTADOR
+- La pantalla se adapta: en celular la vista previa queda fija arriba y todo lo demás se desliza hacia abajo.
+- "0. Subir videos e imágenes": toca el recuadro amarillo (abre tu galería) o arrastra archivos en computador.
+- En celular usa Chrome para Android actualizado. La exportación consume mucha memoria: para videos largos o 1080p es mejor un computador.
+  iPhone/Safari puede no soportar la exportación; si falla, edita ahí y exporta desde un computador.
+
+EDICIÓN DE CLIPS (estilo CapCut)
+- Toca un clip en la línea de tiempo: se ilumina y aparece su panel a la derecha.
+- Recortar: arrastra el borde izquierdo o derecho del clip (o usa "Recorte: empezar el video en" y "Duración").
+- ✂ Dividir: pon la barra de tiempo sobre el clip y pulsa Dividir. ⧉ Duplicar, 🗑 Eliminar.
+- Velocidad: 0.25x a 4x. Al cambiarla, la duración se ajusta sola.
+- ⇥ Unir en secuencia: pega todos los clips uno tras otro sin huecos. También puedes arrastrarlos para moverlos.
+- Animaciones: zoom +/−, paneo (4 direcciones), Ken Burns, latido. Transiciones: fundido, deslizar, zoom, cortina, corte (duración ajustable).
+- Sonido original del video: deslizador de volumen (0 = silencio).
+Límite: hay una sola pista de clips (no se pueden superponer dos videos a la vez).
+
+NOVEDADES v5 (más cerca de CapCut)
+- Deshacer/Rehacer (botones ↶ ↷ o Ctrl+Z) y guardado automático: si cierras o recargas la página, el proyecto y tus videos/imágenes se recuperan
+  (se guardan en tu navegador; la voz generada y la música hay que volver a cargarlas). Botón "Nuevo" para empezar de cero.
+- Pista de SUPERPOSICIÓN: elige un clip, cambia "Pista" a Superposición, y ajusta tamaño y posición (video/imagen sobre el video).
+- TEXTOS animados: botón "T Texto" (pop, aparecer, subir, máquina de escribir), con color, borde, fuente y posición.
+- FILTROS y ajustes por clip: Vívido, Blanco y negro, Cálido, Cine, Suave, Antiguo + brillo, contraste, saturación, desenfoque y sepia.
+- Los datos guardados viven solo en ese navegador y ese dispositivo (no en la nube).
+NO incluye: subtítulos automáticos por IA, quitar fondo, pantalla verde, plantillas, efectos de sonido, ni más de 2 pistas de video.
+Los filtros pueden no verse en Safari/iPhone.
+
+NOVEDADES v6 (voz y subtítulos)
+- Voces de Chile (mujer y hombre) además de España, México y Latino.
+- Casilla "Pausas y respiraciones naturales": pausas en comas y puntos, y una respiración suave antes de las frases que llegan tras un silencio.
+  Las respiraciones son un sonido sintético sutil; una voz con respiración real solo existe en servicios de pago.
+- La voz se ajusta al tiempo de cada escena: si no cabe, se vuelve a generar más rápida (sin cambiar el tono). Solo con Azure o con la voz Edge.
+  Con la voz de Google se acelera hasta 1.3x como antes.
+- Subtítulos: ya no aparece todo el texto de la escena junto. Salen frases cortas (máx. 6 palabras) justo cuando suena cada parte de la voz.
+
+VOZ EDGE (gratis, la mejor sin clave): necesita desplegar desde GitHub (Add new site > Import from Git), porque instala el paquete "msedge-tts".
+  Si usas "arrastrar carpeta" (Netlify Drop), esa función no se instala y la app usa la voz de Google sola (sin avisar, solo suena más robótica).
+
+NOVEDADES v7
+- Línea roja arrastrable: arrástrala (o arrastra sobre la regla de números) para ir al momento exacto. También: barra espaciadora = play/pausa,
+  flechas ← → = 0.1 s, Shift + flechas = 1 s.
+- Voz: debajo del selector aparece qué motor se está usando. La voz gratis de Google SOLO tiene voz de mujer (el selector de hombre no cambia nada ahí);
+  para elegir hombre/mujer de verdad usa Azure (clave) o despliega desde GitHub para tener la voz Edge. Respiraciones más cortas y también entre frases.
+- Las imágenes entran con 5 s. "Repartir en escenas" las mantiene en 5 s (casilla "Imágenes de 5 s"); desmárcala para ajustarlas a cada escena.
+- Botón "📂 Proyectos": cada proyecto es Borrador o Exportado, muestra su peso y se puede abrir, renombrar o borrar. Al exportar te pregunta si quieres borrarlo
+  para liberar espacio (el MP4 ya queda en Descargas). "+ Nuevo" crea otro proyecto sin borrar el actual.
+- Botón "🖼 Imagen IA": genera imágenes con Gemini/Nano Banana (clave de pago, centavos por imagen; el nombre del modelo es editable) o con Pollinations
+  (gratis pero inestable). "Usar en mi video" la agrega a tu biblioteca.
+
+CUENTA E INICIO DE SESIÓN (opcional, con Supabase gratis)
+1. Crea una cuenta en supabase.com y un proyecto nuevo.
+2. En SQL Editor pega todo el archivo supabase-setup.sql y pulsa Run.
+3. En Project Settings > API copia la "Project URL" y la clave "anon public", y pégalas en config.js.
+4. (Recomendado) En Authentication > Providers > Email, desactiva "Confirm email" si no quieres confirmar por correo.
+5. Sube de nuevo la carpeta. Al abrir la página te pedirá correo y contraseña, y tus proyectos (con sus imágenes y videos) se guardan en tu cuenta.
+Límite: el plan gratis tiene poco almacenamiento (alrededor de 1 GB, verifícalo en Supabase); los videos pesados lo llenan rápido. Borra proyectos terminados.
+Si config.js queda vacío, no hay inicio de sesión y todo se guarda solo en este navegador.
+
+NOVEDADES v8
+- VOZ GEMINI (la más natural, hombre o mujer, funciona también arrastrando la carpeta a Netlify Drop): en el panel derecho > Voz, elige
+  "Gemini", pega tu clave de Gemini (la misma de las imágenes), escoge la voz (Puck, Charon, Fenrir, Orus... = hombre; Kore, Zephyr, Leda... = mujer),
+  el acento (neutro, chileno, mexicano, España) y pulsa "Probar esta voz". Cuesta poco por video; si Google te dice que esperes, la app reintenta sola.
+  Con Gemini la casilla de velocidad no cambia nada; si una escena no cabe en su tiempo, se acelera hasta 1.3x.
+- RESPIRACIÓN EN CADA PAUSA: antes solo respiraba al empezar cada escena y al azar tras algunas frases. Ahora detecta cada pausa (comas y puntos) y
+  pone una respiración suave en cada una. Deslizador "Intensidad de respiración" (0 = sin respiración). Es un sonido sintético, no una respiración humana real.
+- IMAGEN IA: modelo corregido a gemini-2.5-flash-image (el anterior no existía). Botones "Agregar al proyecto (5 s)" (la pone al final del video y en tu biblioteca)
+  y "Descargar imagen". Puedes generar otra sin cerrar la ventana. Los errores de cuota/facturación ahora se explican en claro.
+- GUARDAR EN FOTOS: al terminar la exportación aparece "📲 Guardar en Fotos / Compartir" (celular): se abre el menú del teléfono y eliges
+  "Guardar video" (iPhone) o Google Fotos / Galería (Android). También "⬇ Descargar MP4".
+
+CAMBIOS v8.1
+- Exportación mucho más rápida con videos: antes saltaba cuadro por cuadro dentro del video (lentísimo, hasta ~9 veces la duración del video);
+  ahora reproduce el video mientras exporta. Mantén la pestaña abierta y la pantalla encendida mientras exporta (si el navegador la pausa, se retrasa).
+  Las partes que solo tienen imágenes se exportan muy rápido.
+- Al terminar ya no pregunta si borrar el proyecto (si decías que sí se recargaba la página y perdías el botón de guardar). Ahora hay un botón
+  "Borrar proyecto" aparte, para usar después de guardar el video.
+- Al terminar de exportar, la app avisa si el video quedó sin audio y por qué (sin voz, o audio en Opus que Fotos/Galería del teléfono puede no reproducir).
+- Voz Gemini: ahora cada escena se genera con UNA sola petición (antes una por frase): menos espera y menos avisos de límite.
+- Voz Gemini: se generan 3 escenas a la vez y se muestra "Generando voz… X de Y escenas".
+
+NOVEDADES v9 (sin Gemini, todo gratis)
+- IMAGEN IA: ahora usa solo Pollinations con el modelo Flux (gratis, sin clave). La URL se arma en el navegador con tu descripción:
+  https://image.pollinations.ai/prompt/TU_TEXTO?model=flux&width=...&height=... Si Pollinations pide esperar (límite gratuito), la app reintenta sola.
+- VOZ DEL NAVEGADOR (Web Speech API): motor por defecto. Gratis, instantáneo, sin límites y sin clave ni internet. Elige entre las voces en español de tu dispositivo.
+  IMPORTANTE: los navegadores NO permiten grabar esta voz, así que suena al reproducir en el editor pero NO queda dentro del MP4 exportado.
+  Para exportar con voz: elige "Voz con audio dentro del MP4" (Edge/Google/Azure) o sube tu narración mp3/wav. Al exportar con la voz del navegador, la app te avisa.
+- Se eliminaron las claves y el modelo de Gemini (voz e imagen). Las secciones "v8" que mencionan Gemini ya no aplican.
+
+NOVEDADES v9.1
+- "Voz integrada" (motor por defecto): voz gratis y sin límites generada en tu navegador (meSpeak/eSpeak) que SÍ queda grabada en el MP4. Es más robótica que la
+  voz del navegador. Se descarga una vez desde internet (cdn.jsdelivr.net). Si exportas con la "Voz del navegador", la app ofrece cambiar a esta para que el video tenga voz.
+- Sonido de tus videos: los videos que agregas ahora entran con su sonido original activado (deslizador "Sonido original del video"; 0 = silencio).
+- "Música o sonido": ahora acepta también un VIDEO de tu galería para usar solo su sonido (además de mp3/wav).
+
+
+VOZ EDGE + DESCARGA MP3 (v9.2)
+- En "Voz > Voz con audio dentro del MP4" ahora hay un selector de voces neuronales (selector-voces): Chile (Lorenzo/Catalina), México (Dalia/Jorge) y España (Álvaro).
+- Al pulsar "Generar voz" con ese motor, aparece un reproductor y el botón "Descargar MP3" con la narración completa.
+- La función netlify/functions/tts-edge.js devuelve un MP3 en base64 (audio/mpeg). Necesita desplegar desde GitHub (instala "msedge-tts" desde package.json).
+
+v9.3
+- El motor por defecto es ahora "Voz neuronal Edge" (se aplica también a quienes ya usaban la app). La voz del navegador queda solo como vista previa.
+- El archivo que se descarga (MP3, o WAV si el codificador MP3 no carga) se arma con la voz ya mezclada con las respiraciones, igual que el audio del MP4.
+- "Pausas y respiraciones naturales" sigue activado por defecto; la intensidad se ajusta en el panel de voz.
