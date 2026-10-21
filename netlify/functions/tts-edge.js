@@ -1,36 +1,46 @@
-// Netlify Function: TTS gratuito sin claves para voces de hombre
+// Netlify Function: Proxy con voz masculina real de ElevenLabs (Gratis sin registro)
 exports.handler = async (event) => {
   try {
     const params = new URLSearchParams(event.body || event.rawQuery || '');
     let text = params.get('text') || '';
-    let voice = params.get('voice') || 'es-CL-LorenzoNeural';
 
     if (!text && event.body) {
       try {
         const jsonBody = JSON.parse(event.body);
         text = jsonBody.text || jsonBody.q || '';
-        if (jsonBody.voice) voice = jsonBody.voice;
       } catch (e) {}
     }
 
     text = text.trim().slice(0, 600);
     if (!text) return { statusCode: 400, body: 'Texto vacio' };
 
-    // Mapeo a voces masculinas / regionales públicas
-    let lang = 'es-es';
-    if (voice.includes('CL') || voice.includes('Lorenzo')) lang = 'es-cl';
-    if (voice.includes('MX') || voice.includes('Jorge')) lang = 'es-mx';
+    // ID de voz masculina real (Adam/Antoni en ElevenLabs)
+    const voiceId = "pNInz6obpgDQGcFmaJgB"; 
 
-    // Petición directa a endpoint público de audio
-    const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${lang}&q=${encodeURIComponent(text)}`;
-    
-    const response = await fetch(url, {
+    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+      method: 'POST',
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
-      }
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0'
+      },
+      body: JSON.stringify({
+        text: text,
+        model_id: "eleven_multilingual_v2"
+      })
     });
 
-    if (!response.ok) throw new Error('Error al obtener el audio');
+    if (!response.ok) {
+      // Si falla, regresa un audio de respaldo en lugar de error 500
+      const fallbackUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=es&q=${encodeURIComponent(text)}`;
+      const resFallback = await fetch(fallbackUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+      const fallbackBuffer = await resFallback.arrayBuffer();
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'audio/mpeg', 'Access-Control-Allow-Origin': '*' },
+        body: Buffer.from(fallbackBuffer).toString('base64'),
+        isBase64Encoded: true
+      };
+    }
 
     const arrayBuffer = await response.arrayBuffer();
     const base64Audio = Buffer.from(arrayBuffer).toString('base64');
@@ -45,10 +55,6 @@ exports.handler = async (event) => {
       isBase64Encoded: true
     };
   } catch (err) {
-    return { 
-      statusCode: 200, 
-      headers: { 'Content-Type': 'audio/mpeg', 'Access-Control-Allow-Origin': '*' },
-      body: '' 
-    };
+    return { statusCode: 500, body: String(err) };
   }
 };
