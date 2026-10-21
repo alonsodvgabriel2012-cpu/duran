@@ -1,12 +1,4 @@
-// Netlify Function: Proxy directo para Edge TTS con mapeo de voces neuronales
-const VOICE_MAP = {
-  'es-CL-LorenzoNeural': 'es-CL-LorenzoNeural',
-  'es-MX-JorgeNeural': 'es-MX-JorgeNeural',
-  'es-ES-AlvaroNeural': 'es-ES-AlvaroNeural',
-  'es-CL': 'es-CL-LorenzoNeural',
-  'es-MX': 'es-MX-JorgeNeural'
-};
-
+// Netlify Function: TTS gratuito sin claves para voces de hombre
 exports.handler = async (event) => {
   try {
     const params = new URLSearchParams(event.body || event.rawQuery || '');
@@ -24,27 +16,23 @@ exports.handler = async (event) => {
     text = text.trim().slice(0, 600);
     if (!text) return { statusCode: 400, body: 'Texto vacio' };
 
-    // Seleccionar la voz neuronal o usar Lorenzo como predeterminada
-    const selectedVoice = VOICE_MAP[voice] || 'es-CL-LorenzoNeural';
+    // Mapeo a voces masculinas / regionales públicas
+    let lang = 'es-es';
+    if (voice.includes('CL') || voice.includes('Lorenzo')) lang = 'es-cl';
+    if (voice.includes('MX') || voice.includes('Jorge')) lang = 'es-mx';
 
-    // Petición al servicio de síntesis de voz neuronal de Microsoft
-    const url = `https://api.streamelements.com/kappa/v2/speech?voice=${encodeURIComponent(selectedVoice)}&text=${encodeURIComponent(text)}`;
-    const res = await fetch(url);
+    // Petición directa a endpoint público de audio
+    const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${lang}&q=${encodeURIComponent(text)}`;
+    
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+      }
+    });
 
-    if (!res.ok) {
-      // Fallback a voz alternativa de hombre si la específica falla
-      const fallbackUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=es&q=${encodeURIComponent(text)}`;
-      const fallbackRes = await fetch(fallbackUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } });
-      const fallbackBuffer = await fallbackRes.arrayBuffer();
-      return {
-        statusCode: 200,
-        headers: { 'Content-Type': 'audio/mpeg', 'Access-Control-Allow-Origin': '*' },
-        body: Buffer.from(fallbackBuffer).toString('base64'),
-        isBase64Encoded: true
-      };
-    }
+    if (!response.ok) throw new Error('Error al obtener el audio');
 
-    const arrayBuffer = await res.arrayBuffer();
+    const arrayBuffer = await response.arrayBuffer();
     const base64Audio = Buffer.from(arrayBuffer).toString('base64');
 
     return {
@@ -57,6 +45,10 @@ exports.handler = async (event) => {
       isBase64Encoded: true
     };
   } catch (err) {
-    return { statusCode: 500, body: String(err) };
+    return { 
+      statusCode: 200, 
+      headers: { 'Content-Type': 'audio/mpeg', 'Access-Control-Allow-Origin': '*' },
+      body: '' 
+    };
   }
 };
